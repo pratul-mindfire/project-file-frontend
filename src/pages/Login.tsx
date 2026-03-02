@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { loginUser } from "../services/authService";
 import "../styles/login.css";
@@ -10,6 +10,15 @@ const Login = () => {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+    //Redirect if token already exists
+  useEffect(() => {
+    const token = localStorage.getItem("token"); // or wherever you store it
+    if (token) {
+      navigate("/projects");
+    }
+  }, [navigate]);
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

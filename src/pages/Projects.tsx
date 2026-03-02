@@ -2,44 +2,74 @@ import { useEffect, useState } from "react";
 import CreateProjectModal from "../components/CreateProjectModal";
 import ConfirmModal from "../components/ConfirmModal";
 import "../styles/projects.css";
+import { useNavigate } from "react-router-dom";
+import { createProject, getProjects, updateProject, type CreateProjectReq, type Project, type ProjectsRes } from "../services/projectService";
 
-interface Project {
-  id: string;
-  name: string;
-  description: string;
-  filesCount: number;
-  jobsCount: number;
-  createdAt: string;
-}
 
 const Projects = () => {
+
+  const navigate = useNavigate();
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [showCreate, setShowCreate] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [editProject, setEditProject] = useState<Project | null>(null);
+
+  useEffect(() => {
+    const token = localStorage.getItem("token"); // or wherever you store it
+    if (!token) {
+      navigate("/");
+    }
+  }, [navigate]);
 
   // Fake API call simulation
   useEffect(() => {
-    setTimeout(() => {
-      setProjects([
-        {
-          id: "1",
-          name: "AI Processing",
-          description: "Handles ML pipelines",
-          filesCount: 12,
-          jobsCount: 5,
-          createdAt: "2026-02-25",
-        },
-      ]);
-      setLoading(false);
-    }, 1000);
+    callGetProjects()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  const callGetProjects = async () => {
+    setLoading(true);
+    getProjects()
+      .then((data:ProjectsRes) => {
+        setProjects(data.data);
+        setLoading(false);
+      })
+      .catch((err) => {
+        setError(err.message);
+        setLoading(false);
+      });
+  }
+
   const handleDelete = (id: string) => {
-    setProjects((prev) => prev.filter((p) => p.id !== id));
+    setProjects((prev) => prev.filter((p) => p._id !== id));
     setDeleteId(null);
   };
+
+  const handleCreateProject = (newProject: CreateProjectReq) => {
+    if(editProject) {
+      updateProject(newProject.name, newProject.description, editProject._id)
+      .then(() => {
+        callGetProjects();
+      }).catch((err) => {
+        alert("Project update failed: " + err.message);
+      }).finally(() => {  
+        setShowCreate(false);
+        setEditProject(null);
+      });
+    }
+    else{
+      createProject(newProject.name, newProject.description)
+      .then(() => {
+        callGetProjects();
+      }).catch((err) => {
+        alert("Project creation failed: " + err.message);
+      }).finally(() => {  
+        setShowCreate(false);
+      });
+    }
+  }
 
   return (
     <div className="projects-container">
@@ -76,7 +106,7 @@ const Projects = () => {
             </thead>
             <tbody>
               {projects.map((project) => (
-                <tr key={project.id}>
+                <tr key={project._id}>
                   <td>{project.name}</td>
                   <td className="desc-cell">{project.description}</td>
                   <td>{project.filesCount}</td>
@@ -85,10 +115,17 @@ const Projects = () => {
                     {new Date(project.createdAt).toLocaleDateString()}
                   </td>
                   <td className="actions-cell">
-                    <button className="open-btn">Open</button>
+                    <button className="open-btn"
+                    onClick={() => {
+                      setEditProject(project);
+                      setShowCreate(true);
+                    }}
+                    >
+                      Edit
+                    </button>
                     <button
                       className="delete-btn"
-                      onClick={() => setDeleteId(project.id)}
+                      onClick={() => setDeleteId(project._id)}
                     >
                       Delete
                     </button>
@@ -103,10 +140,12 @@ const Projects = () => {
       {/* Modals */}
       {showCreate && (
         <CreateProjectModal
-          onClose={() => setShowCreate(false)}
-          onCreate={(newProject) =>
-            setProjects((prev) => [...prev, newProject])
-          }
+          onClose={() => {
+            setShowCreate(false);
+            setEditProject(null);
+          }}
+          onCreate={handleCreateProject}
+          editProject={editProject}
         />
       )}
 
