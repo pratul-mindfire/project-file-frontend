@@ -1,15 +1,17 @@
 import { useState } from "react";
 import "../styles/createProjectModal.css";
+import type { Project } from "../services/projectService";
 
 interface Props {
   onClose: () => void;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   onCreate: (project: any) => void;
+  editProject: Project | null
 }
 
-const CreateProjectModal = ({ onClose, onCreate }: Props) => {
-  const [name, setName] = useState("");
-  const [description, setDescription] = useState("");
+const CreateProjectModal = ({ onClose, onCreate, editProject }: Props) => {
+  const [name, setName] = useState(editProject ? editProject.name : "");
+  const [description, setDescription] = useState(editProject ? editProject.description : "");
   const [error, setError] = useState("");
 
   const handleSubmit = () => {
@@ -19,12 +21,8 @@ const CreateProjectModal = ({ onClose, onCreate }: Props) => {
     }
 
     onCreate({
-      id: Date.now().toString(),
       name,
       description,
-      filesCount: 0,
-      jobsCount: 0,
-      createdAt: new Date().toISOString(),
     });
 
     onClose();
@@ -62,7 +60,7 @@ const CreateProjectModal = ({ onClose, onCreate }: Props) => {
               className="create-submit"
               onClick={handleSubmit}
             >
-              Create
+              {editProject ? "Update" : "Create"}
             </button>
           </div>
         </div>
