@@ -1,4 +1,4 @@
-import "../styles/confirmModal.css";
+import '../styles/confirmModal.css';
 
 interface Props {
   message: string;
@@ -17,10 +17,7 @@ const ConfirmModal = ({ message, onConfirm, onCancel }: Props) => {
             Cancel
           </button>
 
-          <button
-            className="confirm-delete"
-            onClick={onConfirm}
-          >
+          <button className="confirm-delete" onClick={onConfirm}>
             Confirm
           </button>
         </div>

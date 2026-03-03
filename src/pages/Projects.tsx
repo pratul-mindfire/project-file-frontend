@@ -1,38 +1,44 @@
-import { useEffect, useState } from "react";
-import CreateProjectModal from "../components/CreateProjectModal";
-import ConfirmModal from "../components/ConfirmModal";
-import "../styles/projects.css";
-import { useNavigate } from "react-router-dom";
-import { createProject, getProjects, updateProject, type CreateProjectReq, type Project, type ProjectsRes } from "../services/projectService";
-
+import { useEffect, useState } from 'react';
+import CreateProjectModal from '../components/CreateProjectModal';
+import ConfirmModal from '../components/ConfirmModal';
+import '../styles/projects.css';
+import { useNavigate } from 'react-router-dom';
+import {
+  createProject,
+  deleteProject,
+  getProjects,
+  updateProject,
+  type CreateProjectReq,
+  type Project,
+  type ProjectsRes,
+} from '../services/projectService';
 
 const Projects = () => {
-
   const navigate = useNavigate();
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const [error, setError] = useState('');
   const [showCreate, setShowCreate] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [editProject, setEditProject] = useState<Project | null>(null);
 
   useEffect(() => {
-    const token = localStorage.getItem("token"); // or wherever you store it
+    const token = localStorage.getItem('token'); // or wherever you store it
     if (!token) {
-      navigate("/");
+      navigate('/');
     }
   }, [navigate]);
 
   // Fake API call simulation
   useEffect(() => {
-    callGetProjects()
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    callGetProjects();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const callGetProjects = async () => {
     setLoading(true);
     getProjects()
-      .then((data:ProjectsRes) => {
+      .then((data: ProjectsRes) => {
         setProjects(data.data);
         setLoading(false);
       })
@@ -40,36 +46,50 @@ const Projects = () => {
         setError(err.message);
         setLoading(false);
       });
-  }
+  };
 
   const handleDelete = (id: string) => {
-    setProjects((prev) => prev.filter((p) => p._id !== id));
-    setDeleteId(null);
+    deleteProject(id)
+      .then(() => {
+        // Optionally refetch projects here
+        setProjects((prev) => prev.filter((p) => p._id !== id));
+      })
+      .catch((err) => {
+        alert('Project deletion failed: ' + err.message);
+        callGetProjects(); // Refetch to restore deleted project on failure
+      })
+      .finally(() => {
+        setShowCreate(false);
+        setDeleteId(null);
+      });
   };
 
   const handleCreateProject = (newProject: CreateProjectReq) => {
-    if(editProject) {
+    if (editProject) {
       updateProject(newProject.name, newProject.description, editProject._id)
-      .then(() => {
-        callGetProjects();
-      }).catch((err) => {
-        alert("Project update failed: " + err.message);
-      }).finally(() => {  
-        setShowCreate(false);
-        setEditProject(null);
-      });
-    }
-    else{
+        .then(() => {
+          callGetProjects();
+        })
+        .catch((err) => {
+          alert('Project update failed: ' + err.message);
+        })
+        .finally(() => {
+          setShowCreate(false);
+          setEditProject(null);
+        });
+    } else {
       createProject(newProject.name, newProject.description)
-      .then(() => {
-        callGetProjects();
-      }).catch((err) => {
-        alert("Project creation failed: " + err.message);
-      }).finally(() => {  
-        setShowCreate(false);
-      });
+        .then(() => {
+          callGetProjects();
+        })
+        .catch((err) => {
+          alert('Project creation failed: ' + err.message);
+        })
+        .finally(() => {
+          setShowCreate(false);
+        });
     }
-  }
+  };
 
   return (
     <div className="projects-container">
@@ -111,15 +131,20 @@ const Projects = () => {
                   <td className="desc-cell">{project.description}</td>
                   <td>{project.filesCount}</td>
                   <td>{project.jobsCount}</td>
-                  <td>
-                    {new Date(project.createdAt).toLocaleDateString()}
-                  </td>
+                  <td>{new Date(project.createdAt).toLocaleDateString()}</td>
                   <td className="actions-cell">
-                    <button className="open-btn"
-                    onClick={() => {
-                      setEditProject(project);
-                      setShowCreate(true);
-                    }}
+                    <button
+                      className="view-btn"
+                      onClick={() => navigate(`/projects/${project._id}`)}
+                    >
+                      View
+                    </button>
+                    <button
+                      className="open-btn"
+                      onClick={() => {
+                        setEditProject(project);
+                        setShowCreate(true);
+                      }}
                     >
                       Edit
                     </button>
