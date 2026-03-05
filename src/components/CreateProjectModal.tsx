@@ -1,22 +1,24 @@
-import { useState } from "react";
-import "../styles/createProjectModal.css";
-import type { Project } from "../services/projectService";
+import { useState } from 'react';
+import '../styles/createProjectModal.css';
+import type { Project } from '../services/projectService';
 
 interface Props {
   onClose: () => void;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   onCreate: (project: any) => void;
-  editProject: Project | null
+  editProject: Project | null;
 }
 
 const CreateProjectModal = ({ onClose, onCreate, editProject }: Props) => {
-  const [name, setName] = useState(editProject ? editProject.name : "");
-  const [description, setDescription] = useState(editProject ? editProject.description : "");
-  const [error, setError] = useState("");
+  const [name, setName] = useState(editProject ? editProject.name : '');
+  const [description, setDescription] = useState(
+    editProject ? editProject.description : ''
+  );
+  const [error, setError] = useState('');
 
   const handleSubmit = () => {
     if (!name || !description) {
-      setError("All fields are required");
+      setError('All fields are required');
       return;
     }
 
@@ -49,18 +51,12 @@ const CreateProjectModal = ({ onClose, onCreate, editProject }: Props) => {
           {error && <p className="input-error">{error}</p>}
 
           <div className="create-actions">
-            <button
-              className="create-cancel"
-              onClick={onClose}
-            >
+            <button className="create-cancel" onClick={onClose}>
               Cancel
             </button>
 
-            <button
-              className="create-submit"
-              onClick={handleSubmit}
-            >
-              {editProject ? "Update" : "Create"}
+            <button className="create-submit" onClick={handleSubmit}>
+              {editProject ? 'Update' : 'Create'}
             </button>
           </div>
         </div>

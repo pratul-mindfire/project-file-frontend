@@ -1,6 +1,7 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Login from "../pages/Login";
-import Projects from "../pages/Projects";
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import Login from '../pages/Login';
+import Projects from '../pages/Projects';
+import ProjectDetailsPage from '../pages/ProjectDetailsPage';
 
 const AppRouter = () => {
   return (
@@ -8,6 +9,7 @@ const AppRouter = () => {
       <Routes>
         <Route path="/" element={<Login />} />
         <Route path="/projects" element={<Projects />} />
+        <Route path="/projects/:projectId" element={<ProjectDetailsPage />} />
       </Routes>
     </BrowserRouter>
   );

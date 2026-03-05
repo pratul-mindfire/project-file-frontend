@@ -1,43 +1,42 @@
-import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { loginUser } from "../services/authService";
-import "../styles/login.css";
+import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { loginUser } from '../services/authService';
+import '../styles/login.css';
 
 const Login = () => {
   const navigate = useNavigate();
 
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-    //Redirect if token already exists
+  //Redirect if token already exists
   useEffect(() => {
-    const token = localStorage.getItem("token"); // or wherever you store it
+    const token = localStorage.getItem('token'); // or wherever you store it
     if (token) {
-      navigate("/projects");
+      navigate('/projects');
     }
   }, [navigate]);
-
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     // ✅ Validation
     if (!email || !password) {
-      setError("All fields are required");
+      setError('All fields are required');
       return;
     }
 
     try {
       setLoading(true);
-      setError("");
+      setError('');
 
       await loginUser(email, password);
 
       // ✅ Redirect after success
-      navigate("/projects");
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      navigate('/projects');
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -75,7 +74,7 @@ const Login = () => {
           {error && <p className="error">{error}</p>}
 
           <button type="submit" disabled={loading}>
-            {loading ? "Logging in..." : "Login"}
+            {loading ? 'Logging in...' : 'Login'}
           </button>
         </form>
       </div>
