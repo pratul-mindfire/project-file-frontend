@@ -1,21 +1,30 @@
-import { useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import '../styles/projectDetails.css';
 import { getProject, type Project } from '../services/projectService';
-import { getFiles, type File } from '../services/fileService';
-import { getJobs, type Job } from '../services/jobService';
+import {
+  deleteFile,
+  downloadZip,
+  getFiles,
+  uploadFiles,
+  type File,
+} from '../services/fileService';
+import { getJobs, createJob, type Job } from '../services/jobService';
 
 const ProjectDetailsPage = () => {
   const { projectId } = useParams();
-
+  const navigate = useNavigate();
   const [project, setProject] = useState<Project | null>(null);
   const [files, setFiles] = useState<File[]>([]);
   const [jobs, setJobs] = useState<Job[]>([]);
-  const [uploading, setUploading] = useState(false);
   const [isSelectingFiles, setIsSelectingFiles] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState<string[]>([]);
 
   useEffect(() => {
+    const token = localStorage.getItem('token'); // or wherever you store it
+    if (!token) {
+      navigate('/');
+    }
     callGetProject();
     callGetFiles();
     callGetJobs();
@@ -52,32 +61,52 @@ const ProjectDetailsPage = () => {
     });
   };
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const selectedFiles = e.target.files;
-    if (!selectedFiles) return;
+  const handleDownload = async (job: Job) => {
+    try {
+      const response = await downloadZip(job.projectId, job.outputFileId);
 
-    //  setUploading(true);
+      const blob = await response.blob();
 
-    //  setTimeout(() => {
-    //    const newFiles = Array.from(selectedFiles).map((file) => ({
-    //      id: Date.now().toString() + file.name,
-    //      name: file.name,
-    //      size: `${(file.size / 1024).toFixed(2)} KB`,
-    //    }));
-
-    //    setFiles((prev) => [...prev, ...newFiles]);
-    //    setUploading(false);
-    //  }, 1000);
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `job-${job.outputFileId}-output.zip`; // dynamic name
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Download error:', error);
+    }
   };
 
-  const handleCreateJob = () => {
-    const newJob = {
-      id: Date.now().toString(),
-      status: 'Processing',
-      createdAt: new Date().toISOString(),
-    };
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
 
-    setJobs((prev) => [newJob, ...prev]);
+    if (!files || files.length === 0) return;
+
+    const formData = new FormData();
+
+    // append all selected files
+    Array.from(files).forEach((file) => {
+      formData.append('files', file);
+    });
+
+    uploadFiles(projectId!, formData)
+      .then((data) => {
+        if (data.success) {
+          callGetFiles();
+        } else {
+          alert('File upload failed: ' + data.message);
+        }
+      })
+      .catch((err) => {
+        alert('File upload failed: ' + err.message);
+      })
+      .finally(() => {
+        // reset file input
+        e.target.value = '';
+      });
   };
 
   const handleCreateJobClick = () => {
@@ -92,19 +121,36 @@ const ProjectDetailsPage = () => {
       alert('Please select at least one file');
       return;
     }
+    createJob(projectId!, selectedFiles)
+      .then((data) => {
+        if (data.success) {
+          setJobs((prev) => [...prev, data.data]);
+          callGetJobs();
+        }
+      })
+      .catch((err) => {
+        alert('Job creation failed: ' + err.message);
+      })
+      .finally(() => {
+        setIsSelectingFiles(false);
+        setSelectedFiles([]);
+      });
+  };
 
-    const newJob = {
-      id: Date.now().toString(),
-      status: 'Processing',
-      createdAt: new Date().toISOString(),
-    };
-
-    setJobs((prev) => [newJob, ...prev]);
-
-    // Reset
-    setIsSelectingFiles(false);
-    setSelectedFiles([]);
-    handleCreateJob();
+  const handleDeleteFile = async (fileId: string) => {
+    deleteFile(projectId!, fileId)
+      .then((data) => {
+        if (data.success) {
+          console.log('File deleted successfully');
+        }
+        // remove file from UI without refetch
+        setFiles((prevFiles) =>
+          prevFiles.filter((file) => file._id !== fileId)
+        );
+      })
+      .catch((err) => {
+        alert('File deletion failed: ' + err.message);
+      });
   };
 
   if (!project) return <div>Loading...</div>;
@@ -160,14 +206,14 @@ const ProjectDetailsPage = () => {
           </div>
         </div>
 
-        {uploading && <p className="state-text">Uploading...</p>}
-
         <table className="project-table">
           <thead>
             <tr>
               {isSelectingFiles && <th>Select</th>}
               <th>Name</th>
+              <th>Uploaded Date</th>
               <th>Size</th>
+              <th>Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -189,7 +235,16 @@ const ProjectDetailsPage = () => {
                   </td>
                 )}
                 <td>{file.name}</td>
+                <td>{new Date(file.createdAt).toLocaleDateString()}</td>
                 <td>{file.size}</td>
+                <td>
+                  <button
+                    className="delete-btn"
+                    onClick={() => handleDeleteFile(file._id)}
+                  >
+                    Delete
+                  </button>
+                </td>
               </tr>
             ))}
           </tbody>
@@ -203,19 +258,40 @@ const ProjectDetailsPage = () => {
         <table className="project-table">
           <thead>
             <tr>
+              <th>Job ID</th>
               <th>Status</th>
+              <th>Progress</th>
               <th>Created</th>
+              <th>Completed At</th>
+              <th>Actions</th>
             </tr>
           </thead>
           <tbody>
             {jobs.map((job) => (
-              <tr key={job.id}>
+              <tr key={job._id}>
+                  <td>{job._id}</td>
                 <td>
                   <span className={`job-badge ${job.status.toLowerCase()}`}>
                     {job.status}
                   </span>
                 </td>
+                <td>{job.progress}%</td>
                 <td>{new Date(job.createdAt).toLocaleDateString()}</td>
+                <td>{job.updatedAt ? new Date(job.updatedAt).toLocaleDateString() : '-'}</td>
+                {job.status === 'COMPLETED' ? (
+                  <td className="action-cell">
+                    <button
+                      className="download-btn"
+                      onClick={() => handleDownload(job)}
+                    >
+                      Download
+                    </button>
+                  </td>
+                ) : (
+                  <td className="action-cell">
+                    <span className="disabled-text">Not Ready</span>
+                  </td>
+                )}
               </tr>
             ))}
           </tbody>

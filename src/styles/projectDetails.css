@@ -10,6 +10,26 @@ body {
   margin: auto;
 }
 
+.download-btn {
+  background: #2563eb;
+  color: white;
+  padding: 6px 12px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  width: auto !important;
+}
+
+.download-btn:hover {
+  background: #1d4ed8;
+}
+
+.disabled-text {
+  color: #9ca3af;
+  font-size: 14px;
+}
+
 /* Card Style */
 .project-info,
 .project-section {
@@ -140,6 +160,20 @@ body {
 
 .cancel-btn:hover {
   background: #4f46e5;
+}
+.delete-btn {
+  background: #ef4444;
+  border: none;
+  color: white;
+  padding: 6px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  width: auto !important;
+}
+
+.delete-btn:hover {
+  background: #dc2626;
 }
 
 /* Responsive */
