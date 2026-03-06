@@ -1,4 +1,4 @@
-import { useNavigate, useParams } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import '../styles/projectDetails.css';
 import { getProject, type Project } from '../services/projectService';
@@ -13,23 +13,40 @@ import { getJobs, createJob, type Job } from '../services/jobService';
 
 const ProjectDetailsPage = () => {
   const { projectId } = useParams();
-  const navigate = useNavigate();
   const [project, setProject] = useState<Project | null>(null);
   const [files, setFiles] = useState<File[]>([]);
   const [jobs, setJobs] = useState<Job[]>([]);
   const [isSelectingFiles, setIsSelectingFiles] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState<string[]>([]);
+  const [createdJob, setCreatedJob] = useState<Job | null>(null);
 
   useEffect(() => {
-    const token = localStorage.getItem('token'); // or wherever you store it
-    if (!token) {
-      navigate('/');
-    }
     callGetProject();
     callGetFiles();
     callGetJobs();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [projectId]);
+
+  useEffect(() => {
+    if (!createdJob) return;
+    const interval = setInterval(async () => {
+      getJobs(createdJob.projectId).then((data) => {
+        if (data.data.length > 0) {
+          setJobs([...data.data]);
+          const allCase = data.data.every((job: Job) =>job.status === 'COMPLETED' || job.status === 'FAILED');
+          if(allCase) {
+            clearInterval(interval);
+          }
+        } else {
+          console.error('No Jobs found for project ID:', createdJob.projectId);
+        }
+      });
+    }, 5000);
+
+    // Cleanup when component unmounts
+    return () => clearInterval(interval);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [createdJob]);
 
   const callGetFiles = async () => {
     getFiles(projectId!).then((data) => {
@@ -125,7 +142,8 @@ const ProjectDetailsPage = () => {
       .then((data) => {
         if (data.success) {
           setJobs((prev) => [...prev, data.data]);
-          callGetJobs();
+          setCreatedJob(data.data);
+          //callGetJobs();
         }
       })
       .catch((err) => {
@@ -269,7 +287,7 @@ const ProjectDetailsPage = () => {
           <tbody>
             {jobs.map((job) => (
               <tr key={job._id}>
-                  <td>{job._id}</td>
+                <td>{job._id}</td>
                 <td>
                   <span className={`job-badge ${job.status.toLowerCase()}`}>
                     {job.status}
@@ -277,7 +295,11 @@ const ProjectDetailsPage = () => {
                 </td>
                 <td>{job.progress}%</td>
                 <td>{new Date(job.createdAt).toLocaleDateString()}</td>
-                <td>{job.updatedAt ? new Date(job.updatedAt).toLocaleDateString() : '-'}</td>
+                <td>
+                  {job.updatedAt
+                    ? new Date(job.updatedAt).toLocaleDateString()
+                    : '-'}
+                </td>
                 {job.status === 'COMPLETED' ? (
                   <td className="action-cell">
                     <button
