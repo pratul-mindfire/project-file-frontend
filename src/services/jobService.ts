@@ -6,6 +6,12 @@ export interface GetJobRes {
   data: Job[];
 }
 
+export interface CreateJobRes {
+  success: boolean;
+  message: string;
+  data: Job;
+}
+
 export interface Job {
   _id: string;
   projectId: string;
@@ -53,5 +59,22 @@ export const getJob = async (projectId: string, jobId: string) => {
   }
 
   const data = await response.json();
+  return data;
+};
+
+export const createJob = async (projectId: string, fileIds: string[]) => {
+  const response = await fetch(`${API_BASE}/projects/${projectId}/jobs/zip`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${localStorage.getItem('token')}`,
+    },
+    body: JSON.stringify({ fileIds }),
+  });
+  if (!response.ok) {
+    throw new Error('Job creation failed');
+  }
+
+  const data: CreateJobRes = await response.json();
   return data;
 };

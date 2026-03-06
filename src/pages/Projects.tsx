@@ -22,13 +22,6 @@ const Projects = () => {
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [editProject, setEditProject] = useState<Project | null>(null);
 
-  useEffect(() => {
-    const token = localStorage.getItem('token'); // or wherever you store it
-    if (!token) {
-      navigate('/');
-    }
-  }, [navigate]);
-
   // Fake API call simulation
   useEffect(() => {
     callGetProjects();

@@ -55,3 +55,38 @@ export const deleteFile = async (projectId: string, fileId: string) => {
   const data = await response.json();
   return data;
 };
+
+export const downloadZip = async (projectId: string, fileId: string) => {
+  const response = await fetch(
+    `${API_BASE}/projects/${projectId}/files/${fileId}/download`,
+    {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/zip',
+        Authorization: `Bearer ${localStorage.getItem('token')}`,
+      },
+    }
+  );
+
+  if (!response.ok) {
+    throw new Error('Download failed');
+  }
+
+  return response;
+};
+
+export const uploadFiles = async (projectId: string, files: FormData) => {
+  const response = await fetch(`${API_BASE}/projects/${projectId}/files`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${localStorage.getItem('token')}`,
+    },
+    body: files,
+  });
+  if (!response.ok) {
+    throw new Error('Project creation failed');
+  }
+
+  const data: GetFilesRes = await response.json();
+  return data;
+};
