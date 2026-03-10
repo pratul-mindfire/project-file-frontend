@@ -18,22 +18,8 @@ const AppRouter = () => {
             </ProtectedRoute>
           }
         >
-          <Route
-            path="/projects"
-            element={
-              // <ProtectedRoute>
-              <Projects />
-              // </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/projects/:projectId"
-            element={
-              // <ProtectedRoute>
-              <ProjectDetailsPage />
-              // </ProtectedRoute>
-            }
-          />
+          <Route path="/projects" element={<Projects />} />
+          <Route path="/projects/:projectId" element={<ProjectDetailsPage />} />
         </Route>
         <Route path="*" element={<NotFound />} />
       </Routes>
