@@ -33,8 +33,10 @@ const ProjectDetailsPage = () => {
       getJobs(createdJob.projectId).then((data) => {
         if (data.data.length > 0) {
           setJobs([...data.data]);
-          const allCase = data.data.every((job: Job) =>job.status === 'COMPLETED' || job.status === 'FAILED');
-          if(allCase) {
+          const allCase = data.data.every(
+            (job: Job) => job.status === 'COMPLETED' || job.status === 'FAILED'
+          );
+          if (allCase) {
             clearInterval(interval);
           }
         } else {
@@ -171,6 +173,16 @@ const ProjectDetailsPage = () => {
       });
   };
 
+  const handleSelectAll = () => {
+  if (selectedFiles.length === files.length) {
+    // Unselect all
+    setSelectedFiles([]);
+  } else {
+    // Select all
+    setSelectedFiles(files.map((file) => file._id));
+  }
+};
+
   if (!project) return <div>Loading...</div>;
 
   return (
@@ -227,7 +239,17 @@ const ProjectDetailsPage = () => {
         <table className="project-table">
           <thead>
             <tr>
-              {isSelectingFiles && <th>Select</th>}
+              {isSelectingFiles && (
+                <th>
+                  <input
+                    type="checkbox"
+                    checked={
+                      selectedFiles.length === files.length && files.length > 0
+                    }
+                    onChange={handleSelectAll}
+                  />
+                </th>
+              )}
               <th>Name</th>
               <th>Uploaded Date</th>
               <th>Size</th>
