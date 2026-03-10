@@ -77,12 +77,10 @@ button:disabled {
   cursor: not-allowed;
 }
 
-/* Error */
-.error {
-  color: red;
+.error-text {
+  color: #dc2626;
   font-size: 13px;
-  margin-bottom: 12px;
-  text-align: center;
+  margin-top: 4px;
 }
 
 /* Responsive */
