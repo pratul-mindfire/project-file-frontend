@@ -104,10 +104,17 @@ const ProjectDetailsPage = () => {
 
     if (!files || files.length === 0) return;
 
+    const MAX_SIZE = 5 * 1024 * 1024; // 5MB
+
     const formData = new FormData();
 
     // append all selected files
     Array.from(files).forEach((file) => {
+      if (file.size > MAX_SIZE) {
+        alert(`${file.name} exceeds 5MB limit`);
+        e.target.value = '';
+        return;
+      }
       formData.append('files', file);
     });
 
@@ -174,14 +181,14 @@ const ProjectDetailsPage = () => {
   };
 
   const handleSelectAll = () => {
-  if (selectedFiles.length === files.length) {
-    // Unselect all
-    setSelectedFiles([]);
-  } else {
-    // Select all
-    setSelectedFiles(files.map((file) => file._id));
-  }
-};
+    if (selectedFiles.length === files.length) {
+      // Unselect all
+      setSelectedFiles([]);
+    } else {
+      // Select all
+      setSelectedFiles(files.map((file) => file._id));
+    }
+  };
 
   if (!project) return <div>Loading...</div>;
 
@@ -235,111 +242,114 @@ const ProjectDetailsPage = () => {
             </label>
           </div>
         </div>
-
-        <table className="project-table">
-          <thead>
-            <tr>
-              {isSelectingFiles && (
-                <th>
-                  <input
-                    type="checkbox"
-                    checked={
-                      selectedFiles.length === files.length && files.length > 0
-                    }
-                    onChange={handleSelectAll}
-                  />
-                </th>
-              )}
-              <th>Name</th>
-              <th>Uploaded Date</th>
-              <th>Size</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {files.map((file) => (
-              <tr key={file._id}>
+        <div className="table-wrapper">
+          <table className="project-table">
+            <thead>
+              <tr>
                 {isSelectingFiles && (
-                  <td>
+                  <th>
                     <input
                       type="checkbox"
-                      checked={selectedFiles.includes(file._id)}
-                      onChange={() => {
-                        setSelectedFiles((prev) =>
-                          prev.includes(file._id)
-                            ? prev.filter((id) => id !== file._id)
-                            : [...prev, file._id]
-                        );
-                      }}
+                      checked={
+                        selectedFiles.length === files.length &&
+                        files.length > 0
+                      }
+                      onChange={handleSelectAll}
                     />
-                  </td>
+                  </th>
                 )}
-                <td>{file.name}</td>
-                <td>{new Date(file.createdAt).toLocaleDateString()}</td>
-                <td>{file.size}</td>
-                <td>
-                  <button
-                    className="delete-btn"
-                    onClick={() => handleDeleteFile(file._id)}
-                  >
-                    Delete
-                  </button>
-                </td>
+                <th>Name</th>
+                <th>Uploaded Date</th>
+                <th>Size</th>
+                <th>Actions</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {files.map((file) => (
+                <tr key={file._id}>
+                  {isSelectingFiles && (
+                    <td>
+                      <input
+                        type="checkbox"
+                        checked={selectedFiles.includes(file._id)}
+                        onChange={() => {
+                          setSelectedFiles((prev) =>
+                            prev.includes(file._id)
+                              ? prev.filter((id) => id !== file._id)
+                              : [...prev, file._id]
+                          );
+                        }}
+                      />
+                    </td>
+                  )}
+                  <td>{file.name}</td>
+                  <td>{new Date(file.createdAt).toLocaleDateString()}</td>
+                  <td>{file.size}</td>
+                  <td>
+                    <button
+                      className="delete-btn"
+                      onClick={() => handleDeleteFile(file._id)}
+                    >
+                      Delete
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </section>
 
       {/* Jobs Section */}
       <section className="project-section">
         <h3>Jobs</h3>
-
-        <table className="project-table">
-          <thead>
-            <tr>
-              <th>Job ID</th>
-              <th>Status</th>
-              <th>Progress</th>
-              <th>Created</th>
-              <th>Completed At</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {jobs.map((job) => (
-              <tr key={job._id}>
-                <td>{job._id}</td>
-                <td>
-                  <span className={`job-badge ${job.status.toLowerCase()}`}>
-                    {job.status}
-                  </span>
-                </td>
-                <td>{job.progress}%</td>
-                <td>{new Date(job.createdAt).toLocaleDateString()}</td>
-                <td>
-                  {job.updatedAt
-                    ? new Date(job.updatedAt).toLocaleDateString()
-                    : '-'}
-                </td>
-                {job.status === 'COMPLETED' ? (
-                  <td className="action-cell">
-                    <button
-                      className="download-btn"
-                      onClick={() => handleDownload(job)}
-                    >
-                      Download
-                    </button>
-                  </td>
-                ) : (
-                  <td className="action-cell">
-                    <span className="disabled-text">Not Ready</span>
-                  </td>
-                )}
+        <div className="table-wrapper">
+          <table className="project-table">
+            <thead>
+              <tr>
+                <th>Job ID</th>
+                <th>Status</th>
+                <th>Progress</th>
+                <th>Created</th>
+                <th>Completed At</th>
+                <th>Actions</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {jobs.map((job) => (
+                <tr key={job._id}>
+                  <td>{job._id}</td>
+                  <td>
+                    <span className={`job-badge ${job.status.toLowerCase()}`}>
+                      {job.status}
+                    </span>
+                  </td>
+                  <td>{job.progress}%</td>
+                  <td>{new Date(job.createdAt).toLocaleDateString()}</td>
+                  <td>
+                    {job.updatedAt
+                      ? new Date(job.updatedAt).toLocaleDateString()
+                      : '-'}
+                  </td>
+                  {job.status === 'COMPLETED' ? (
+                    <td className="action-cell">
+                      <button
+                        className="download-btn"
+                        onClick={() => handleDownload(job)}
+                      >
+                        Download
+                      </button>
+                    </td>
+                  ) : (
+                    <td className="action-cell">
+                      <span className="disabled-text">Not Ready</span>
+                    </td>
+                  )}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </section>
     </div>
   );
